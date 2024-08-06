@@ -29,7 +29,7 @@ def create_url():
 
     if URLMap.query.filter_by(short=custom_id).first():
         raise InvalidAPIUsage(
-            f'Предложенный вариант короткой ссылки уже существует.'
+            'Предложенный вариант короткой ссылки уже существует.'
         )
 
     urlmap = URLMap()
