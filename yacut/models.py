@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 from flask import url_for
 
@@ -10,7 +10,9 @@ class URLMap(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     original = db.Column(db.String(MAX_LENGTH))
     short = db.Column(db.String(SHORT_MAX_LENGTH), unique=True, nullable=False)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.now(UTC))
+    # пробовала делать через datetime.now(UTC) но практикум не смог импортировать
+    # UTC из datetime
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
 
     def to_dict(self):
         return dict(
