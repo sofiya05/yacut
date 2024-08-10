@@ -2,46 +2,47 @@ from http import HTTPStatus
 
 from flask import jsonify, request
 
-from yacut import app, db
+from yacut import app
 from yacut.constants import SHORT_MAX_LENGTH
 from yacut.error_handlers import InvalidAPIUsage
 from yacut.models import URLMap
-from yacut.utils import check_symbols, create_unique_short_url
 
 
 @app.route('/api/id/', methods=('POST',))
-def create_url():
+def save_short_url():
     data = request.get_json(silent=True)
 
     if not data:
         raise InvalidAPIUsage('Отсутствует тело запроса')
 
     if 'url' not in data or not data['url']:
-        raise InvalidAPIUsage('\"url\" является обязательным полем!')
+        raise InvalidAPIUsage('"url" является обязательным полем!')
 
     if 'custom_id' not in data or not data['custom_id']:
-        data['custom_id'] = create_unique_short_url()
+        data['custom_id'] = URLMap.create_unique_short_url()
 
-    custom_id = data['custom_id']
+    short = data['custom_id']
 
-    if len(custom_id) > SHORT_MAX_LENGTH or not check_symbols(custom_id):
+    if len(short) > SHORT_MAX_LENGTH or not URLMap.check_symbols(short):
         raise InvalidAPIUsage('Указано недопустимое имя для короткой ссылки')
 
-    if URLMap.query.filter_by(short=custom_id).first():
+    if URLMap.find_original_url(short):
         raise InvalidAPIUsage(
             'Предложенный вариант короткой ссылки уже существует.'
         )
+    return (
+        jsonify(
+            URLMap.save_short_url(
+                original=data.get('url'), short=data.get('custom_id')
+            ).to_dict()
+        ),
+        HTTPStatus.CREATED,
+    )
 
-    urlmap = URLMap()
-    urlmap.from_dict(data)
-    db.session.add(urlmap)
-    db.session.commit()
-    return jsonify(urlmap.to_dict()), HTTPStatus.CREATED
 
-
-@app.route('/api/id/<string:short_id>/', methods=('GET',))
-def get_original_url(short_id):
-    url = URLMap.query.filter_by(short=short_id).first()
+@app.route('/api/id/<string:short>/', methods=('GET',))
+def get_original_url(short):
+    url = URLMap.find_original_url(short)
     if not url:
         raise InvalidAPIUsage('Указанный id не найден', HTTPStatus.NOT_FOUND)
     return jsonify({'url': url.original}), HTTPStatus.OK
