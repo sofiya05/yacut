@@ -11,9 +11,9 @@ from wtforms.validators import (
 from yacut.constants import (
     CUSTOM_ID_LABEL,
     LENGTH_SHORT_URL_ERROR,
-    MAX_LENGTH,
     ORIGINAL_LINK_LABEL,
     ORIGINAL_LINK_REQUIRED_MESSAGE,
+    ORIGINAL_URL_MAX_LENGTH,
     PATTERN,
     SHORT_MAX_LENGTH,
     SUBMIT_BUTTON_LABEL,
@@ -28,7 +28,7 @@ class URLForm(FlaskForm):
         ORIGINAL_LINK_LABEL,
         validators=(
             DataRequired(message=ORIGINAL_LINK_REQUIRED_MESSAGE),
-            Length(max=MAX_LENGTH),
+            Length(max=ORIGINAL_URL_MAX_LENGTH),
         ),
     )
     custom_id = URLField(
@@ -41,6 +41,8 @@ class URLForm(FlaskForm):
     )
     submit = SubmitField(SUBMIT_BUTTON_LABEL)
 
-    def validate_custom_id(self, field):
-        if URLMap.query.filter_by(short=field.data).first():
+    def validate_custom_id(self, short):
+        if not short:
+            return
+        if URLMap.find_URLMap_model(short=short.data):
             raise ValidationError(UNIQUE_LINK_ERROR_MESSAGE)

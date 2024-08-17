@@ -13,23 +13,28 @@ def index_view():
     form = URLForm()
     if not form.validate_on_submit():
         return render_template('index.html', form=form)
-    short = URLMap.save_short_url(
-        form.original_link.data, form.custom_id.data
-    ).short
-    return render_template(
-        'index.html',
-        form=form,
-        short=short,
-        short_url=url_for(REDIRECT_URL_FUNC, url=short, _external=True),
-    )
+    try:
+        return render_template(
+            'index.html',
+            form=form,
+            short_url=url_for(
+                REDIRECT_URL_FUNC,
+                short=URLMap.save_or_create_short(
+                    form.original_link.data, form.custom_id.data
+                ).short,
+                _external=True,
+            ),
+        )
+    except Exception:
+        abort(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@app.route('/<string:url>')
-def redirect_url(url):
-    short = URLMap.find_original_url(url)
-    if not short:
+@app.route('/<string:short>')
+def redirect_url(short):
+    URLModel = URLMap.find_URLMap_model(short)
+    if not URLModel:
         abort(HTTPStatus.NOT_FOUND)
-    return redirect(short.original)
+    return redirect(URLModel.original)
 
 
 @app.route('/api/docs/')
