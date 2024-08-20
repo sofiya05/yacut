@@ -43,7 +43,6 @@ class URLMap(db.Model):
         )
         return short
 
-    # в константах избавляемся от смешивания валидаций а тут добавляем?
     @staticmethod
     def save_or_create_short(original, short: None):
         if not short:
@@ -57,11 +56,6 @@ class URLMap(db.Model):
     @staticmethod
     def find_URLMap_model(short):
         return URLMap.query.filter_by(short=short).first()
-
-    # видимо принципом KISS в этом простом проекте руководствоваться
-    # не приходится. Или может в ревью я смогу получить логическое
-    # объяснение создания микро-ОРМ в проекте, где всего пара
-    # методов? Усложнять ради усложнения можно до бесконечности
 
     @staticmethod
     def save_or_create_short_url_api(data):

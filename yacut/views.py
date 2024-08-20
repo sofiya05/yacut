@@ -31,10 +31,10 @@ def index_view():
 
 @app.route('/<string:short>')
 def redirect_url(short):
-    URLModel = URLMap.find_URLMap_model(short)
-    if not URLModel:
+    url_model = URLMap.find_URLMap_model(short)
+    if not url_model:
         abort(HTTPStatus.NOT_FOUND)
-    return redirect(URLModel.original)
+    return redirect(url_model.original)
 
 
 @app.route('/api/docs/')
